@@ -1,13 +1,13 @@
 {
     "domain": "viewsonic_projector",
     "name": "ViewSonic Projector",
-    "version": "1.0.0",
+    "codeowners": ["@nfeuerhelm"],
     "config_flow": true,
+    "dependencies": [],
     "documentation": "https://github.com/nfeuerhelm/ha-proj-viewsonic",
+    "integration_type": "device",
+    "iot_class": "local_polling",
     "issue_tracker": "https://github.com/nfeuerhelm/ha-proj-viewsonic/issues",
     "requirements": [],
-    "dependencies": [],
-    "codeowners": ["@nfeuerhelm"],
-    "integration_type": "device",
-    "iot_class": "local_polling"
+    "version": "1.0.0"
   }
