@@ -8,6 +8,7 @@ from homeassistant.components.media_player import MediaPlayerEntity # type: igno
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature, MediaPlayerState # type: ignore
 import homeassistant.helpers.config_validation as cv # type: ignore
 from homeassistant.helpers.event import async_track_time_interval # type: ignore
+from homeassistant.helpers.entity import DeviceInfo # type: ignore
 from .const import DOMAIN, CMD_LIST, STATUS_LIST, CONF_HOST, CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,14 +17,16 @@ SCAN_INTERVAL = timedelta(seconds=30)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     host = config_entry.data[CONF_HOST]
     name = config_entry.data.get(CONF_NAME, "ViewSonic Projector")
-    projector = ViewSonicProjector(host, name)
+    model = config_entry.data.get("model", "unknown")
+    projector = ViewSonicProjector(host, name, model)
     async_add_entities([projector], True)
     async_track_time_interval(hass, projector.async_update, SCAN_INTERVAL)
 
 class ViewSonicProjector(MediaPlayerEntity):
-    def __init__(self, host, name):
+    def __init__(self, host, name, model):
         self._host = host
         self._name = name
+        self._model = model
         self._attr_unique_id = f"viewsonic_{self._host.replace('.', '_')}"
         self._attr_state = None
         self._attr_volume_level = None
@@ -45,6 +48,16 @@ class ViewSonicProjector(MediaPlayerEntity):
             MediaPlayerEntityFeature.TURN_OFF |
             MediaPlayerEntityFeature.VOLUME_SET |
             MediaPlayerEntityFeature.SELECT_SOURCE
+        )
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._name,
+            manufacturer="ViewSonic",
+            model=self._model,  # Uses the selected model from config_flow
+            connections={(DOMAIN, self._host)},
         )
     
     async def async_turn_on(self):
