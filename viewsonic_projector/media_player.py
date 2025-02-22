@@ -119,16 +119,37 @@ class ViewSonicProjector(MediaPlayerEntity):
     async def async_select_source(self, source: str):
         await self._send_command(CMD_LIST[f'src_{source}'])
         self._attr_source = source
+
+    async def _connect(self):
+        """Ensure a persistent connection to the projector."""
+        if not hasattr(self, "_sock") or self._sock is None:
+            try:
+                self._sock = socket.create_connection((self._host, 4661), timeout=9.0)
+            except Exception as e:
+                _LOGGER.error("Failed to connect to projector: %s", e)
+                self._sock = None
     
     async def _send_command(self, command):
+        """Send a command using the persistent connection."""
+        await self._connect()  # Ensure the connection exists
+        if not self._sock:
+            return None
+
         try:
-            with socket.create_connection((self._host, 4661), timeout=9.0) as sock:
-                sock.sendall(command)
-                response = sock.recv(1024)
-                return response
+            self._sock.sendall(command)
+            response = self._sock.recv(1024)
+            return response
         except Exception as e:
-            _LOGGER.warning(f'Failed to send command: {e}')
+            _LOGGER.error("Communication error: %s", e)
+            self._sock = None  # Mark connection as lost
             return None
 
     def _process_response(self, response):
         return STATUS_LIST.get(response, False)
+
+    async def async_will_remove_from_hass(self):
+        """Close the persistent connection when removing the entity."""
+        if hasattr(self, "_sock") and self._sock:
+            self._sock.close()
+            self._sock = None
+
