@@ -61,6 +61,13 @@ class ViewSonicProjector(MediaPlayerEntity):
             connections={(DOMAIN, self._host)},
         )
     
+    @property
+    def icon(self):
+        """Return a custom icon based on power state."""
+        if self._attr_state == MediaPlayerState.ON:
+            return "mdi:projector"  # Custom icon when ON
+        return "mdi:projector-off"  # Custom icon when OFF
+    
     async def async_turn_on(self):
         await self._send_command(CMD_LIST['pwr_on'])
         self._attr_state = MediaPlayerState.ON
