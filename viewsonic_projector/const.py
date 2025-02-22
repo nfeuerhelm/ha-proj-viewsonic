@@ -2,6 +2,15 @@ from homeassistant.const import CONF_HOST, CONF_NAME # type: ignore
 
 DOMAIN = "viewsonic_projector"
 
+PROJECTOR_MODELS = {
+    "unknown":  "Unknown ViewSonic Projector",
+    "px749-4k": "ViewSonic PX749-4K",
+    "px701-4k": "ViewSonic PX701-4K",
+    "px727-4k": "ViewSonic PX727-4K",
+}
+
+PROJECTOR_MODELS_LIST = [ key for key in PROJECTOR_MODELS.keys() ]
+
 DEFAULT_HOST = ""
 DEFAULT_PORT = 4661
 
