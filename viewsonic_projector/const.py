@@ -9,6 +9,8 @@ PROJECTOR_MODELS = {
     "px727-4k": "ViewSonic PX727-4K",
 }
 
+PROJECTOR_MODELS_LIST = [ key for key in PROJECTOR_MODELS.keys() ]
+
 DEFAULT_HOST = ""
 DEFAULT_PORT = 4661
 

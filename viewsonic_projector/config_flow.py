@@ -2,17 +2,17 @@ import logging
 import voluptuous as vol # type: ignore
 from homeassistant import config_entries # type: ignore
 from homeassistant.core import callback # type: ignore
-from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType # type: ignore
+from homeassistant.helpers.selector import selector, TextSelector, TextSelectorConfig, TextSelectorType # type: ignore
 
-from .const import DOMAIN, CONF_HOST, CONF_NAME, PROJECTOR_MODELS
+from .const import DOMAIN, CONF_HOST, CONF_NAME, PROJECTOR_MODELS_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
-        vol.Optional(CONF_NAME, default="ViewSonic Projector"): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
-        vol.Optional("model", default="unknown"): vol.In(PROJECTOR_MODELS),
+        vol.Required(CONF_NAME, default="ViewSonic Projector"): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
+        vol.Required("model", default="unknown"): selector({"select": {"options": PROJECTOR_MODELS_LIST, "mode": "dropdown"}}),
     }
 )
 
@@ -55,8 +55,8 @@ class ViewSonicProjectorOptionsFlow(config_entries.OptionsFlow):
                 ): str,
                 vol.Optional(
                     "model",
-                    default=self.entry.options.get("model", "unknown"),
-                ): vol.In(PROJECTOR_MODELS),
+                    default=self.entry.options.get("model", self.entry.data.get("model", "unknown")),
+                ): selector({"select": {"options": PROJECTOR_MODELS_LIST, "mode": "dropdown"}}),
             }
         )
 
