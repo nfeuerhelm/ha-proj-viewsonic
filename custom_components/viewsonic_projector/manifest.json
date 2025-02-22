@@ -4,7 +4,10 @@
     "version": "1.0.0",
     "config_flow": true,
     "documentation": "https://github.com/nfeuerhelm/ha-proj-viewsonic",
+    "issue_tracker": "https://github.com/nfeuerhelm/ha-proj-viewsonic/issues",
     "requirements": [],
     "dependencies": [],
-    "codeowners": ["@nfeuerhelm"]
+    "codeowners": ["@nfeuerhelm"],
+    "integration_type": "device",
+    "iot_class": "local_polling"
   }
