@@ -1,0 +1,10 @@
+{
+    "domain": "viewsonic_projector",
+    "name": "ViewSonic Projector",
+    "version": "1.0.0",
+    "config_flow": true,
+    "documentation": "https://github.com/nfeuerhelm/ha-proj-viewsonic",
+    "requirements": [],
+    "dependencies": [],
+    "codeowners": ["@nfeuerhelm"]
+  }
