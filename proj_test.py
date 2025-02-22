@@ -79,6 +79,20 @@ def disconnect(sock: socket.socket):
     except Exception as e:
         print(f"Error disconnecting: {e}")
 
+def check_pwr_status(sock):
+    print('Power Status...')
+    rtn = send_message(sock, CMD_LIST['pwr?'])
+    time.sleep(2)
+    return rtn
+
+def pwr_on(sock):
+    print('Powering On...')
+    send_message(sock, CMD_LIST['on'])
+
+def pwr_off(sock):
+    print('Powering Off...')
+    send_message(sock, CMD_LIST['off'])
+
 if __name__ == "__main__":
     HOST = "192.168.2.117"  # Change to target IP
     PORT = 4661  # Change to target port
@@ -86,27 +100,21 @@ if __name__ == "__main__":
     sock = connect(HOST, PORT, timeout=30)
 
     if sock:
-        print('Power Status...')
-        send_message(sock, CMD_LIST['pwr?'])
-        time.sleep(2)
+        check_pwr_status(sock)
 
-        print('Powering On...')
-        send_message(sock, CMD_LIST['on'])
+        pwr_on(sock)
 
         for i in range(30):
-            time.sleep(2)
             print(f'Checking: {i}')
-            out = send_message(sock, CMD_LIST['pwr?'])
+            out = check_pwr_status(sock)
             if out == 'pwr_on':
                 break
 
-        print('Powering Off...')
-        send_message(sock, CMD_LIST['off'])
+        pwr_off(sock)
 
         for i in range(30):
             print(f'Checking: {i}')
-            time.sleep(2)
-            out = send_message(sock, CMD_LIST['pwr?'])
+            out = check_pwr_status(sock)
             if out == 'pwr_off':
                 break
 
