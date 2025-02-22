@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo # type: ignore
 from .const import DOMAIN, CMD_LIST, STATUS_LIST, CONF_HOST, CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     host = config_entry.data[CONF_HOST]
@@ -28,7 +28,7 @@ class ViewSonicProjector(MediaPlayerEntity):
         self._name = name
         self._model = model
         self._attr_unique_id = f"viewsonic_{self._host.replace('.', '_')}"
-        self._attr_state = None
+        self._attr_state = MediaPlayerState.STANDBY
         self._attr_volume_level = None
         self._attr_is_volume_muted = None
         self._attr_source = None
@@ -47,7 +47,8 @@ class ViewSonicProjector(MediaPlayerEntity):
             MediaPlayerEntityFeature.TURN_ON |
             MediaPlayerEntityFeature.TURN_OFF |
             MediaPlayerEntityFeature.VOLUME_SET |
-            MediaPlayerEntityFeature.SELECT_SOURCE
+            MediaPlayerEntityFeature.SELECT_SOURCE |
+            MediaPlayerEntityFeature.VOLUME_MUTE
         )
 
     @property
@@ -68,12 +69,30 @@ class ViewSonicProjector(MediaPlayerEntity):
         await self._send_command(CMD_LIST['pwr_off'])
         self._attr_state = MediaPlayerState.OFF
     
+    async def async_set_volume_level(self, volume: float):
+        """Volume level of the media player (0..1)."""
+        # convert volume to command level
+        cmd_vol = int(volume) * self._max_vol
+        cmd_string = CMD_LIST['vol_set'] + bytes([cmd_vol, cmd_vol + 137])
+        await self._send_command(cmd_string)
+        self._attr_volume_level = volume
+
+    async def async_mute_volume(self, mute: bool):
+        await self._send_command(CMD_LIST['mute_on' if mute else 'mute_off'])
+        self._attr_is_volume_muted = mute
+    
+    async def async_select_source(self, source: str):
+        await self._send_command(CMD_LIST[f'src_{source}'])
+        self._attr_source = source
+    
     async def async_update(self, now=None):
+        """Poll the projector for updates."""
+
         pwr_status = await self._send_command(CMD_LIST['pwr?'])  # Query projector power status
         if pwr_status:
             pwr_status = self._process_response(pwr_status)
-            if pwr_status[0:3] == "pwr":
-                match pwr_status[4:]:
+            if pwr_status:
+                match pwr_status:
                     case 'off':
                         self._attr_state = MediaPlayerState.OFF
                     case 'on':
@@ -96,14 +115,14 @@ class ViewSonicProjector(MediaPlayerEntity):
             mute_status = await self._send_command(CMD_LIST['mute?'])  # Query projector mute status
             if mute_status:
                 mute_output = self._process_response(mute_status)
-                if not mute_output:
-                    _LOGGER.warning(f'Unknown mute status. Response: {mute_status}')
-                elif mute_output[0:4] == "mute":
-                    match mute_output[5:]:
+                if mute_output:
+                    match mute_output:
                         case 'off':
                             self._attr_is_volume_muted = False
                         case 'on':
                             self._attr_is_volume_muted = True
+                else:
+                    _LOGGER.warning(f'Unknown mute status. Response: {self._bytes_to_readable_string(mute_status)}')
 
             await asyncio.sleep(0.5)
             source_status = await self._send_command(CMD_LIST['src?'])  # Query projector source status
@@ -123,22 +142,6 @@ class ViewSonicProjector(MediaPlayerEntity):
                         _LOGGER.warning(f'Source status not found in response. Response: {source_status}')
                 except KeyError:
                     _LOGGER.warning(f'Source status not matched. Status: {source_status}')
-    
-    async def async_set_volume_level(self, volume: float):
-        """Volume level of the media player (0..1)."""
-        # convert volume to command level
-        cmd_vol = int(volume) * self._max_vol
-        cmd_string = CMD_LIST['vol_set'] + bytes([cmd_vol, cmd_vol + 137])
-        await self._send_command(cmd_string)
-        self._attr_volume_level = volume
-
-    async def async_mute_volume(self, mute: bool):
-        await self._send_command(CMD_LIST['mute_on' if mute else 'mute_off'])
-        self._attr_is_volume_muted = mute
-    
-    async def async_select_source(self, source: str):
-        await self._send_command(CMD_LIST[f'src_{source}'])
-        self._attr_source = source
 
     async def _connect(self):
         """Ensure a persistent connection to the projector."""
@@ -177,7 +180,10 @@ class ViewSonicProjector(MediaPlayerEntity):
         return STATUS_LIST.get(response, False)
     
     def _bytes_to_readable_string(self, bytes):
-        return ' '.join([ hex(d) for d in bytes ])
+        if bytes is not None:
+            return ' '.join([ format(d, '#04x') for d in bytes ])
+        else:
+            return ''
 
     async def async_will_remove_from_hass(self):
         """Close the persistent connection when removing the entity."""
