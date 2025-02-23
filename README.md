@@ -4,7 +4,7 @@
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/nfeuerhelm/ha-proj-viewsonic)
 ![GitHub License](https://img.shields.io/github/license/nfeuerhelm/ha-proj-viewsonic)
 
-![GitHub Release](https://img.shields.io/github/v/release/nfeuerhelm/ha-proj-viewsonic)
+![GitHub Release](https://img.shields.io/github/v/release/nfeuerhelm/ha-proj-viewsonic?sort=semver&display_name=tag)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/nfeuerhelm/ha-proj-viewsonic/hacs.yaml?branch=main&label=HACS%20Validate)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/nfeuerhelm/ha-proj-viewsonic/hassfest.yaml?branch=main&label=hassfest%20Validate)
 
