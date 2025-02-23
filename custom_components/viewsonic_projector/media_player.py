@@ -37,6 +37,7 @@ class ViewSonicProjector(MediaPlayerEntity):
         self._max_vol = 20
         self._connection_est = None
 
+
         self._state_change = None
         self._state_change_start = None
 
@@ -64,6 +65,7 @@ class ViewSonicProjector(MediaPlayerEntity):
             connections={(DOMAIN, self._host)},
         )
     
+
     @property
     def icon(self):
         """Return a custom icon based on power state."""
@@ -76,6 +78,7 @@ class ViewSonicProjector(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.ON
         self._state_change = 'on'
         self._state_change_start = time.time()
+
     
     async def async_turn_off(self):
         await self._send_command(CMD_LIST['pwr_off'])
