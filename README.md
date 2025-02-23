@@ -19,32 +19,41 @@ This is a custom integration for Home Assistant that adds support for control of
     - Use 'unknown' for other ViewSonic projectors supporting the RS-232/LAN Control Protocol Specification V1.5
     - Projectors supporting older versions of the RS-232/LAN Control Protocol Specification may work using 'unknown' but your milage may vary
     - **Pro9 series projectors are not supported**
+    - _Let me know with [an issue](https://github.com/nfeuerhelm/ha-proj-viewsonic/issues/new) if you confirm this works with your projector model_
 - A working network connection between Home Assistant and your supported projector
 
 _Note: For full functionality, make sure to enable `Standby LAN Control` found in `ADVANCED` → `LAN Control Settings` or similar menu location._
 
-## Home Assistant Features
-- `media_player`
+## Home Assistant Device Features
+- `media_player` entity
+  - Controls: 
     - turn on
     - turn off
     - volume set
     - mute set
     - source set
+  - Attribures:
+    - power state
+    - volume level
+    - mute state
+    - source selection 
 
 ## Installation
 ### Manual Installation
 1. Download the latest release from the [Releases](https://github.com/nfeuerhelm/ha-proj-viewsonic/releases) page.
-2. Extract the contents and place them in the `custom_components/viewsonic_projector` directory inside your Home Assistant configuration folder.
+2. Extract the contents and copy the `viewsonic_projector` directory into the `/config/custom_components/` directory on your Home Assistant instance.
 3. Restart Home Assistant.
 
 ### HACS Installation
-1. Add this repository as a custom repository in HACS.
+1. Add this repository as a custom repository in HACS. \
+  [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nfeuerhelm&repository=ha-proj-viewsonic&category=integration)
 2. Search for "ViewSonic Projector" and install it.
 3. Restart Home Assistant.
 
 ## Configuration
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=viewsonic_projector)
 1. Go to `Settings` → `Devices & Services` → `Add Integration`.
-2. Search for "ViewSonic Projector" and select it.
+2. Search for "ViewSonic Projector" and select it. 
 3. Follow the on-screen instructions to set up the integration.
 
 Alternatively, you can configure it manually in `configuration.yaml`:
