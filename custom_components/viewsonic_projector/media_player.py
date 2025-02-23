@@ -37,6 +37,10 @@ class ViewSonicProjector(MediaPlayerEntity):
         self._max_vol = 20
         self._connection_est = None
 
+
+        self._state_change = None
+        self._state_change_start = None
+
     @property
     def name(self):
         return self._attr_unique_id
@@ -61,13 +65,26 @@ class ViewSonicProjector(MediaPlayerEntity):
             connections={(DOMAIN, self._host)},
         )
     
+
+    @property
+    def icon(self):
+        """Return a custom icon based on power state."""
+        if self._attr_state == MediaPlayerState.ON:
+            return "mdi:projector"  # Custom icon when ON
+        return "mdi:projector-off"  # Custom icon when OFF
+    
     async def async_turn_on(self):
         await self._send_command(CMD_LIST['pwr_on'])
         self._attr_state = MediaPlayerState.ON
+        self._state_change = 'on'
+        self._state_change_start = time.time()
+
     
     async def async_turn_off(self):
         await self._send_command(CMD_LIST['pwr_off'])
         self._attr_state = MediaPlayerState.OFF
+        self._state_change = 'off'
+        self._state_change_start = time.time()
     
     async def async_set_volume_level(self, volume: float):
         """Volume level of the media player (0..1)."""
@@ -94,9 +111,15 @@ class ViewSonicProjector(MediaPlayerEntity):
             if pwr_status:
                 match pwr_status:
                     case 'off':
-                        self._attr_state = MediaPlayerState.OFF
+                        if not (self._state_change == 'on' and (time.time() - self._state_change_start) < 60.0):
+                            self._attr_state = MediaPlayerState.OFF
+                            self._state_change = None
+                            self._state_change_start = None
                     case 'on':
-                        self._attr_state = MediaPlayerState.ON
+                        if not (self._state_change == 'off' and (time.time() - self._state_change_start) <= 60.0):
+                            self._attr_state = MediaPlayerState.ON
+                            self._state_change = None
+                            self._state_change_start = None
 
         if self._attr_state == MediaPlayerState.ON:
             await asyncio.sleep(0.5)

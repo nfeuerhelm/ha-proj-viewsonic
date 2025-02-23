@@ -4,9 +4,24 @@ DOMAIN = "viewsonic_projector"
 
 PROJECTOR_MODELS = {
     "unknown":  "Unknown ViewSonic Projector",
+    "ls510w": "ViewSonic LS510W",
+    "ls510wh": "ViewSonic LS510WH",
+    "ls560w": "ViewSonic LS560W",
+    "ls560wh": "ViewSonic LS560WH",
+    "ls610hdh": "ViewSonic LS610HDH",
+    "ls610wh": "ViewSonic LS610WH",
+    "ls832wu": "ViewSonic LS832WU",
+    "pa504w": "ViewSonic PA504W",
+    "pa700s": "ViewSonic PA700S",
+    "pa700w": "ViewSonic PA700W",
+    "pa700x": "ViewSonic PA700X",
+    "ps502w": "ViewSonic PS502W",
+    "ps502x": "ViewSonic PS502X",
+    "px701-4ke": "ViewSonic PX701-4KE",
+    "px704hd": "ViewSonic PX704HD",
+    'px728-4k': "ViewSonic PX728-4K",
+    "px748-4k": "ViewSonic PX748-4K",
     "px749-4k": "ViewSonic PX749-4K",
-    "px701-4k": "ViewSonic PX701-4K",
-    "px727-4k": "ViewSonic PX727-4K",
 }
 
 PROJECTOR_MODELS_LIST = [ key for key in PROJECTOR_MODELS.keys() ]
