@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo # type: ignore
 from .const import DOMAIN, CMD_LIST, STATUS_LIST, CONF_HOST, CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     host = config_entry.data[CONF_HOST]
@@ -39,6 +39,8 @@ class ViewSonicProjector(MediaPlayerEntity):
 
         self._state_change = None
         self._state_change_start = None
+
+        self._round_robin = 0
 
     @property
     def name(self):
@@ -71,6 +73,18 @@ class ViewSonicProjector(MediaPlayerEntity):
             return "mdi:projector"  # Custom icon when ON
         return "mdi:projector-off"  # Custom icon when OFF
     
+    @property
+    def round_robin(self) -> int:
+        _max = 2
+
+        rtn = self._round_robin
+
+        self._round_robin += 1
+        if self._round_robin > _max:
+            self._round_robin = 0
+
+        return rtn
+    
     async def async_turn_on(self):
         await self._send_command(CMD_LIST['pwr_on'])
         self._attr_state = MediaPlayerState.ON
@@ -102,79 +116,93 @@ class ViewSonicProjector(MediaPlayerEntity):
     async def async_update(self, now=None):
         """Poll the projector for updates."""
 
+        # Get the power state
+        await self.async_update_power()
+
+        # if the projector is on, wait 2 seconds then do one of three state checks
+        if self._attr_state == MediaPlayerState.ON:
+            await asyncio.sleep(2.0)
+            match self.round_robin:
+                case 0:
+                    await self.async_update_volume()
+                case 1:
+                    await self.async_update_mute()
+                case 2:
+                    await self.async_update_source()
+
+    async def async_update_source(self):
+        source_status = await self._send_command(CMD_LIST['src?'])  # Query projector source status
+        if source_status:
+            src_states = { 
+                    0 : None,
+                    3 : 'HDMI1', 
+                    7 : 'HDMI2', 
+                    15 : 'USB-C'
+                }
+            try:
+                self._attr_source = src_states[source_status[7]]
+            except IndexError:
+                if self._process_response(source_status):
+                    self._attr_source = None
+                else:
+                    _LOGGER.warning(f'Source status not found in response. Response: {self._bytes_to_readable_string(source_status)}')
+            except KeyError:
+                _LOGGER.warning(f'Source status not matched. Status: {self._bytes_to_readable_string(source_status)}')
+
+    async def async_update_mute(self):
+        mute_status = await self._send_command(CMD_LIST['mute?'])  # Query projector mute status
+        if mute_status:
+            mute_output = self._process_response(mute_status)
+            if mute_output:
+                match mute_output:
+                    case 'off':
+                        self._attr_is_volume_muted = False
+                    case 'on':
+                        self._attr_is_volume_muted = True
+            else:
+                _LOGGER.warning(f'Unknown mute status. Response: {self._bytes_to_readable_string(mute_status)}')
+
+    async def async_update_volume(self):
+        vol_status = await self._send_command(CMD_LIST['volume?'])  # Query projector volume status
+        if vol_status:
+            try:
+                vol_status = vol_status[7]
+                self._attr_volume_level = vol_status / self._max_vol
+            except IndexError:
+                if self._process_response(vol_status):
+                    self._attr_volume_level = None
+                else:
+                    _LOGGER.warning(f'Volume status not found in response. Response: {self._bytes_to_readable_string(vol_status)}')
+
+    async def async_update_power(self):
         pwr_status = await self._send_command(CMD_LIST['pwr?'])  # Query projector power status
         if pwr_status:
-            pwr_status = self._process_response(pwr_status)
-            if pwr_status:
-                match pwr_status:
+            pwr_output = self._process_response(pwr_status)
+            if pwr_output:
+                match pwr_output:
                     case 'off':
                         if not (self._state_change == 'on' and (time.time() - self._state_change_start) < 60.0):
                             self._attr_state = MediaPlayerState.OFF
                             self._state_change = None
                             self._state_change_start = None
                     case 'on':
-                        if not (self._state_change == 'off' and (time.time() - self._state_change_start) <= 60.0):
+                        if not (self._state_change == 'off' and (time.time() - self._state_change_start) < 60.0):
                             self._attr_state = MediaPlayerState.ON
                             self._state_change = None
                             self._state_change_start = None
-
-        if self._attr_state == MediaPlayerState.ON:
-            await asyncio.sleep(0.5)
-            vol_status = await self._send_command(CMD_LIST['volume?'])  # Query projector volume status
-            if vol_status:
-                try:
-                    vol_status = vol_status[7]
-                    self._attr_volume_level = vol_status / self._max_vol
-                except IndexError:
-                    if self._process_response(vol_status):
-                        self._attr_volume_level = None
-                    else:
-                        _LOGGER.warning(f'Volume status not found in response. Response: {vol_status}')
-
-            await asyncio.sleep(0.5)
-            mute_status = await self._send_command(CMD_LIST['mute?'])  # Query projector mute status
-            if mute_status:
-                mute_output = self._process_response(mute_status)
-                if mute_output:
-                    match mute_output:
-                        case 'off':
-                            self._attr_is_volume_muted = False
-                        case 'on':
-                            self._attr_is_volume_muted = True
-                else:
-                    _LOGGER.warning(f'Unknown mute status. Response: {self._bytes_to_readable_string(mute_status)}')
-
-            await asyncio.sleep(0.5)
-            source_status = await self._send_command(CMD_LIST['src?'])  # Query projector source status
-            if source_status:
-                src_states = { 
-                    0 : None,
-                    3 : 'HDMI1', 
-                    7 : 'HDMI2', 
-                    15 : 'USB-C'
-                }
-                try:
-                    self._attr_source = src_states[source_status[7]]
-                except IndexError:
-                    if self._process_response(source_status):
-                        self._attr_source = None
-                    else:
-                        _LOGGER.warning(f'Source status not found in response. Response: {source_status}')
-                except KeyError:
-                    _LOGGER.warning(f'Source status not matched. Status: {source_status}')
 
     async def _connect(self):
         """Ensure a persistent connection to the projector."""
         if not hasattr(self, "_sock") or self._sock is None:
             try:
-                self._sock = socket.create_connection((self._host, 4661), timeout=2.0)
+                self._sock = socket.create_connection((self._host, 4661), timeout=5.0)
                 self._connection_est = time.time()
             except Exception as e:
-                _LOGGER.error("Failed to connect to projector: %s", e)
+                _LOGGER.error(f'Failed to connect to projector: {e}')
                 self._sock = None
                 self._connection_est = None
         else:
-            _LOGGER.info('Socket already open')
+            _LOGGER.info(f'Socket already open - {self._connection_est}')
     
     async def _send_command(self, command):
         """Send a command using the persistent connection."""
