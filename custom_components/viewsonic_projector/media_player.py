@@ -84,7 +84,7 @@ class ViewSonicProjector(MediaPlayerEntity):
             self._round_robin = 0
 
         return rtn
-    
+
     async def async_turn_on(self):
         await self._send_command(CMD_LIST['pwr_on'])
         self._attr_state = MediaPlayerState.ON
