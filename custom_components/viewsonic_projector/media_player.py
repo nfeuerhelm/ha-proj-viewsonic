@@ -9,7 +9,7 @@ from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 import homeassistant.helpers.config_validation as cv # type: ignore
 from homeassistant.helpers.event import async_track_time_interval # type: ignore
 from homeassistant.helpers.entity import DeviceInfo # type: ignore
-from .const import DOMAIN, CMD_LIST, STATUS_LIST, CONF_HOST, CONF_NAME
+from .const import DOMAIN, CMD_LIST, STATUS_LIST, CONF_HOST, CONF_NAME, SOURCE_STATES, PROJECTOR_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -32,7 +32,7 @@ class ViewSonicProjector(MediaPlayerEntity):
         self._attr_volume_level = None
         self._attr_is_volume_muted = None
         self._attr_source = None
-        self._attr_source_list = ["HDMI1", "HDMI2", "USB-C"]
+        self._attr_source_list = PROJECTOR_MODELS[model]
     
         self._max_vol = 20
         self._connection_est = None
@@ -133,14 +133,8 @@ class ViewSonicProjector(MediaPlayerEntity):
     async def async_update_source(self):
         source_status = await self._send_command(CMD_LIST['src?'])  # Query projector source status
         if source_status:
-            src_states = { 
-                    0 : None,
-                    3 : 'HDMI1', 
-                    7 : 'HDMI2', 
-                    15 : 'USB-C'
-                }
             try:
-                self._attr_source = src_states[source_status[7]]
+                self._attr_source = SOURCE_STATES[source_status[7]]
             except IndexError:
                 if self._process_response(source_status):
                     self._attr_source = None
