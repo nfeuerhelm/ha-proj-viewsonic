@@ -59,9 +59,9 @@ _Note: For full functionality, make sure to enable `Standby LAN Control` found i
 Alternatively, you can configure it manually in `configuration.yaml`:
 ```yaml
 viewsonic_projector:
-  host: "192.168.x.x"
-  name: "My Projector"
-  model: "px749-4k"
+  - host: "192.168.x.x"
+    name: "My Projector"
+    model: "px749-4k"
 ```
 
 ## Contributing
