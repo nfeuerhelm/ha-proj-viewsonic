@@ -176,3 +176,11 @@ SOURCE_STATES = {
     28: 'USBDisplay',
     30: 'USB2',
 }
+
+INTERVALS = {
+    "update": 5,
+    "slow_update": 30,
+    "command": 0.2,
+    "slow_command": 2.0,
+    "timeout": 5.0
+}

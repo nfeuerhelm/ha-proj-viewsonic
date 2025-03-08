@@ -13,6 +13,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
         vol.Required(CONF_NAME, default="ViewSonic Projector"): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
         vol.Required("model", default="unknown"): selector({"select": {"options": PROJECTOR_MODELS_LIST, "mode": "dropdown"}}),
+        vol.Required("reduce traffic", default=False): bool,
     }
 )
 
@@ -57,8 +58,14 @@ class ViewSonicProjectorOptionsFlow(config_entries.OptionsFlow):
                     "model",
                     default=self.entry.options.get("model", self.entry.data.get("model", "unknown")),
                 ): selector({"select": {"options": PROJECTOR_MODELS_LIST, "mode": "dropdown"}}),
+                vol.Optional(
+                    "reduce traffic",
+                    default=self.entry.options.get("reduce traffic", False)
+                ): bool,
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors)
+        return self.async_show_form(step_id="init", 
+                                    data_schema=data_schema, 
+                                    errors=errors)
 
