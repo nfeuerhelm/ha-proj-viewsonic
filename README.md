@@ -26,17 +26,19 @@ _Note: For full functionality, make sure to enable `Standby LAN Control` found i
 
 ## Home Assistant Device Features
 - `media_player` entity
-  - Controls: 
-    - turn on
-    - turn off
-    - volume set
-    - mute set
-    - source set
+  - Actions: 
+    - power control (`media_player.turn_on`, `media_player.turn_off`)
+    - volume control (`media_player.volume_set`, `media_player.volume_up`, `media_player.volume_down`)
+    - mute control (`media_player.volume_mute`)
+    - source set (`media_player.select_source`)
+  - State: power status
   - Attribures:
-    - power state
-    - volume level
-    - mute state
-    - source selection 
+    - volume level (`volume_level`)
+    - mute state (`is_volume_muted`)
+    - source selection (`source`)
+    - source list (`source_list`)
+- `binary_sensor` entity
+  - State: connection status
 
 ## Installation
 ### Manual Installation
@@ -60,9 +62,12 @@ Alternatively, you can configure it manually in `configuration.yaml`:
 ```yaml
 viewsonic_projector:
   - host: "192.168.x.x"
-    name: "My Projector"
-    model: "px749-4k"
+    name: "My Projector" # Optional; default: "Viewsonic Projector"
+    model: "px749-4k" # Optional; default: "Unknown"
+    reduce_traffic: False # Optional; default: False
 ```
+
+_Note: You need to restart Home Assistant Core after changing the reduce traffice setting for it to take effect._
 
 ## Contributing
 Contributions are welcome! Please submit issues and pull requests via [GitHub](https://github.com/nfeuerhelm/ha-proj-viewsonic).
