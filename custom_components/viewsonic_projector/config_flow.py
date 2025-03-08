@@ -65,5 +65,7 @@ class ViewSonicProjectorOptionsFlow(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors)
+        return self.async_show_form(step_id="init", 
+                                    data_schema=data_schema, 
+                                    errors=errors)
 

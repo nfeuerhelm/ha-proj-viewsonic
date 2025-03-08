@@ -8,6 +8,8 @@
     "integration_type": "device",
     "iot_class": "local_polling",
     "issue_tracker": "https://github.com/nfeuerhelm/ha-proj-viewsonic/issues",
+    "platforms": ["media_player", "binary_sensor"],
     "requirements": [],
+    "supported_brands": ["ViewSonic"],
     "version": "1.0.0"
   }

@@ -14,27 +14,26 @@ from .const import DOMAIN, CMD_LIST, STATUS_LIST, CONF_HOST, CONF_NAME, SOURCE_S
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    host = config_entry.data[CONF_HOST]
-    name = config_entry.data.get(CONF_NAME, "ViewSonic Projector")
-    model = config_entry.data.get("model", "unknown")
-    reduce_traffic = config_entry.data.get("reduce traffic", False)
-    projector = ViewSonicProjector(host, name, model, reduce_traffic)
+    projector = ViewSonicProjector(hass, config_entry)
+    hass.data[DOMAIN][config_entry.entry_id]["projector"] = projector
     async_add_entities([projector], True)
     async_track_time_interval(hass, 
                               projector.async_update, 
-                              timedelta(seconds=INTERVALS['update'] if not reduce_traffic else INTERVALS['slow_update']))
+                              timedelta(seconds=INTERVALS['update'] if not config_entry.data.get("reduce traffic", False) else INTERVALS['slow_update']))
 
 class ViewSonicProjector(MediaPlayerEntity):
-    def __init__(self, host, name, model, reduce_traffic):
-        self._host = host
-        self._name = name
-        self._model = model
+    def __init__(self, hass, config_entry):
+        self.hass = hass
+        self._entry_id = config_entry.entry_id
+        self._host = config_entry.data[CONF_HOST]
+        self._name = config_entry.data.get(CONF_NAME, "ViewSonic Projector")
+        self._model = config_entry.data.get("model", "unknown")
         self._attr_unique_id = f"viewsonic_{self._host.replace('.', '_')}"
         self._attr_state = MediaPlayerState.STANDBY
         self._attr_volume_level = None
         self._attr_is_volume_muted = None
         self._attr_source = None
-        self._attr_source_list = PROJECTOR_MODELS[model]
+        self._attr_source_list = PROJECTOR_MODELS[self._model]
     
         self._max_vol = 20
         self._connection_est = None
@@ -44,11 +43,15 @@ class ViewSonicProjector(MediaPlayerEntity):
         self._state_change = None
         self._state_change_start = None
 
-        self._reduce_traffic = reduce_traffic
+        self._reduce_traffic = config_entry.data.get("reduce traffic", False)
         self._round_robin = 0
 
     @property
     def name(self):
+        return self._name
+
+    @property
+    def unique_id(self):
         return self._attr_unique_id
 
     @property
@@ -77,6 +80,11 @@ class ViewSonicProjector(MediaPlayerEntity):
         if self._attr_state == MediaPlayerState.ON:
             return "mdi:projector"  # Custom icon when ON
         return "mdi:projector-off"  # Custom icon when OFF
+    
+    @property
+    def is_connected(self):
+        """Returns true if socket connection is active"""
+        return self._sock is not None and self._connection_est is not None
 
     @property
     def round_robin(self) -> int:
@@ -142,6 +150,10 @@ class ViewSonicProjector(MediaPlayerEntity):
                 await self.async_update_mute()
                 await asyncio.sleep(INTERVALS['command'])
                 await self.async_update_source()
+        
+        # update connection binary sensor
+        if self.hass and self.hass.data[DOMAIN][self._entry_id]["connection"] is not None:
+            await self.hass.data[DOMAIN][self._entry_id]["connection"].async_update()
 
     async def async_update_source(self):
         source_status = await self._send_command(CMD_LIST['src?'])  # Query projector source status
