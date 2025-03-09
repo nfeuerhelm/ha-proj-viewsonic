@@ -128,12 +128,13 @@ class ViewSonicProjector(MediaPlayerEntity):
     
     async def async_update(self, now=None):
         """Poll the projector for updates."""
-
+        _LOGGER.debug("Running Async Update...")
         # Get the power state
         await self.async_update_power()
 
         # if the projector is on, wait 2 seconds then do one of three state checks
         if self._attr_state == MediaPlayerState.ON:
+            _LOGGER.debug("Media Player On")
             if self._reduce_traffic:
                 await asyncio.sleep(INTERVALS['slow_command'])
                 match self.round_robin:
