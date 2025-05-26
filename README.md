@@ -1,6 +1,6 @@
 # Home Assistant Custom Integration - ViewSonic Projector
 
-![HACS Badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square) 
+![HACS Badge](https://img.shields.io/badge/HACS-Default-blue.svg?style=flat-square) 
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/nfeuerhelm/ha-proj-viewsonic)
 ![GitHub License](https://img.shields.io/github/license/nfeuerhelm/ha-proj-viewsonic)
 
