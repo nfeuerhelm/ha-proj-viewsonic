@@ -29,7 +29,7 @@ class ViewSonicProjector(MediaPlayerEntity):
         self._name = config_entry.data.get(CONF_NAME, "ViewSonic Projector")
         self._model = config_entry.data.get("model", "unknown")
         self._attr_unique_id = f"viewsonic_{self._host.replace('.', '_')}"
-        self._attr_state = MediaPlayerState.STANDBY
+        self._attr_state = MediaPlayerState.OFF
         self._attr_volume_level = None
         self._attr_is_volume_muted = None
         self._attr_source = None
